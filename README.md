@@ -4,9 +4,9 @@
 [![rank](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/rank.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
 [![reward](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/reward.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3?utm_source=github&utm_medium=readme&utm_campaign=u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
 
-one-line-pitches writes a single sentence to a file. It is a pitch to a friend who has never written code: they have mentioned the same app idea a dozen times, so it invites them to describe that idea in their own words to an agent, try a working first version tonight, and know that changing their mind costs nothing.
+one-line-pitches writes a single sentence to a file. It is a pitch to a friend who has never written code: they keep saving their app idea for someday, so it asks them to describe that idea in their own words to an agent, try a working first version tonight, and know that fixing it costs no more than one more sentence.
 
-The sentence is built from three clauses — the shared history, the concrete ask with tonight's payoff, and the low-risk turn that closes it — and the program checks the result before writing it: one line, one sentence, no leading or trailing space, no double space, and at most 240 characters.
+The sentence is built from three clauses — the someday-versus-tonight turn, the concrete ask with tonight's payoff, and the low-risk turn that closes it — and the program checks the result before writing it: one line, one sentence, no leading or trailing space, no double space, no question mark, and at most 240 characters.
 
 ## Run it
 

@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""one-line-pitches: write one pitch sentence to entry.txt.
+"""one-line-pitches: write one pitch sentence to /output/entry.txt.
 
-The sentence is aimed at one friend who has never written code. They
-have brought up the same app idea a dozen times, so the pitch asks them
-to describe it to an agent in their own words and be tapping a working
-first version tonight — and to know that changing their mind costs
-nothing. The low-risk turn is the closing beat, not a summary or slogan.
+The sentence speaks to one friend who has never coded: they keep saving
+their app idea for someday, so they should describe it to an agent in
+their own words and be tapping a working first version tonight, with
+fixing it costing no more than one more sentence. The someday-versus-
+tonight turn opens it, and the low-risk turn lands on the last words,
+not on a summary or a slogan.
 
-Standard library only, no network. Deterministic: identical bytes on
-every run.
+Standard library only, no network. Deterministic: the same bytes on every run.
 """
 
 import os
 import sys
 
-# The sentence is assembled from three clauses, one per beat of the
-# pitch, so each beat can be checked on its own: the shared history, the
-# concrete ask with tonight's payoff, then the low-risk turn that closes it.
+# The sentence is built from three clauses, one per beat of the pitch, so
+# each beat can be checked on its own: the someday hook, the concrete
+# ask with tonight's payoff, then the low-risk turn that closes it.
 CLAUSES = (
-    "You've told me about that app idea a dozen times,",
-    "so describe it to an agent on make.fun in your own words and tonight you'll be tapping a working first version,",
-    "and changing your mind costs nothing.",
+    "Stop saving that app idea for someday and describe it to an agent on make.fun in your own words,",
+    "and tonight you'll be tapping a working first version,",
+    "and if it's wrong, one more sentence fixes it.",
 )
 
 LINE = " ".join(CLAUSES)
@@ -43,6 +43,8 @@ def problems(text: str) -> list:
         found.append("entry must be a single line")
     if "  " in text:
         found.append("entry must not contain a double space")
+    if "?" in text:
+        found.append("entry must be one sentence, no question mark mid-text")
     if not stripped.endswith("."):
         found.append("entry must end as one sentence")
     return found
