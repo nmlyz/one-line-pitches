@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""one-line-pitches: write one pitch sentence to /output/entry.txt.
+"""one-line-pitches: write one pitch sentence to entry.txt.
 
-The sentence speaks to one friend who has never coded: they have talked
-about an app idea a dozen times, so they should describe it to an agent
-in their own words and be tapping a working first version tonight, with
-changing their mind costing nothing. The low-risk turn lands on the last
-words, not on a summary or a slogan.
+The sentence is aimed at one friend who has never written code. They
+have brought up the same app idea a dozen times, so the pitch asks them
+to describe it to an agent in their own words and be tapping a working
+first version tonight — and to know that changing their mind costs
+nothing. The low-risk turn is the closing beat, not a summary or slogan.
 
-Standard library only, no network. Deterministic: the same bytes on every run.
+Standard library only, no network. Deterministic: identical bytes on
+every run.
 """
 
 import os
 import sys
 
-# The sentence is built from three clauses, one per beat of the pitch, so
-# each beat can be checked on its own: the shared history, the concrete
-# ask with tonight's payoff, then the low-risk turn that closes it.
+# The sentence is assembled from three clauses, one per beat of the
+# pitch, so each beat can be checked on its own: the shared history, the
+# concrete ask with tonight's payoff, then the low-risk turn that closes it.
 CLAUSES = (
     "You've told me about that app idea a dozen times,",
     "so describe it to an agent on make.fun in your own words and tonight you'll be tapping a working first version,",
@@ -40,6 +41,8 @@ def problems(text: str) -> list:
         found.append("entry must not start or end with white space")
     if "\n" in text or "\r" in text:
         found.append("entry must be a single line")
+    if "  " in text:
+        found.append("entry must not contain a double space")
     if not stripped.endswith("."):
         found.append("entry must end as one sentence")
     return found
