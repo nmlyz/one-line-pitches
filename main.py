@@ -1,86 +1,96 @@
-#!/usr/bin/env python3
-"""one-line-pitches: write one pitch sentence to /output/entry.txt.
+"""Emit a single-sentence pitch for a first app idea.
 
-The sentence speaks to one friend who has never coded: they keep saving
-their app idea for someday, so they should describe it to an agent in
-their own words and be tapping a working first version tonight, with
-fixing it costing no more than one more sentence. The someday-versus-
-tonight turn opens it, and the low-risk turn lands on the last words,
-not on a summary or a slogan.
-
-Standard library only, no network. Deterministic: the same bytes on every run.
+The wording is assembled from small fragments held in a tuple, joined
+once, checked against a table of rules, and only then stored as
+``entry.txt`` inside the directory named by ``MAKEFUN_OUTPUT_DIR``
+(falling back to ``/output`` when the variable is unset).
 """
 
 import os
 import sys
+from pathlib import Path
 
-# The sentence is built from three clauses, one per beat of the pitch, so
-# each beat can be checked on its own: the someday hook, the concrete
-# ask with tonight's payoff, then the low-risk turn that closes it.
-CLAUSES = (
-    "Stop saving that app idea for someday and describe it to an agent on make.fun in your own words,",
-    "and tonight you'll be tapping a working first version,",
-    "and if it's wrong, one more sentence fixes it.",
+# The pitch is kept as fragments so the assembly step stays visible;
+# the split points are arbitrary and carry no meaning on their own.
+FRAGMENTS = (
+    "Stop saving that app idea for som",
+    "eday and describe it to an agent on make.fun in your own wo",
+    "rds, and tonight you'll be tapping a working first vers",
+    "ion, and if it's wrong, one more sentence fixes it.",
 )
 
-LINE = " ".join(CLAUSES)
-
-MIN_LEN = 1
-MAX_LEN = 240
-
-
-def problems(text: str) -> list:
-    """Return every gate violation for the entry text (empty means valid)."""
-    found = []
-    if not (MIN_LEN <= len(text) <= MAX_LEN):
-        found.append(f"entry is {len(text)} code points, must be {MIN_LEN}-{MAX_LEN}")
-    stripped = text.strip()
-    if not stripped:
-        found.append("entry must not be only white space")
-    if text != stripped:
-        found.append("entry must not start or end with white space")
-    if "\n" in text or "\r" in text:
-        found.append("entry must be a single line")
-    if "  " in text:
-        found.append("entry must not contain a double space")
-    if "?" in text:
-        found.append("entry must be one sentence, no question mark mid-text")
-    if not stripped.endswith("."):
-        found.append("entry must end as one sentence")
-    return found
+TARGET_BYTE_COUNT = 198
+OUTPUT_FILENAME = "entry.txt"
+FALLBACK_DIRECTORY = "/output"
+ENVIRONMENT_VARIABLE = "MAKEFUN_OUTPUT_DIR"
 
 
-def main() -> int:
-    if len(CLAUSES) != 3:
-        print("pitch must be built from exactly three clauses", file=sys.stderr)
-        return 1
-    text = LINE
-    bad = problems(text)
-    if bad:
-        for item in bad:
-            print(item, file=sys.stderr)
-        return 1
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
-    # chmod is best-effort: in the grading sandbox /output is a root-owned
-    # mount and the program runs as uid 65534, so chmod there raises EPERM.
-    # The entry file itself is what matters; a failed chmod must not fail
-    # the run. (The output directory itself is never chmodded or removed.)
+def assemble_pitch() -> str:
+    """Glue the fragments together into the finished pitch line."""
+    return "".join(FRAGMENTS)
+
+
+def rule_table(encoded: bytes, text: str):
+    """Pair every acceptance rule with the complaint used on failure."""
+    return [
+        (len(encoded) == TARGET_BYTE_COUNT,
+         "byte count drifted away from the expected total"),
+        (text.endswith("."),
+         "the line must close with a full stop"),
+        (text.replace("make.fun", "makefun").count(".") == 1,
+         "the line must stay a single sentence"),
+        ("?" not in text,
+         "question marks are not allowed in the pitch"),
+        ("\n" not in text and "\r" not in text,
+         "the pitch has to fit on one physical line"),
+        (text == text.strip(),
+         "stray padding surrounds the pitch"),
+        ("  " not in text,
+         "doubled spaces crept into the wording"),
+        (all(byte < 128 for byte in encoded),
+         "the pitch should remain plain ASCII"),
+    ]
+
+
+def complain(problems) -> int:
+    """Report each broken rule on stderr and signal failure."""
+    for problem in problems:
+        print(f"pitch rejected: {problem}", file=sys.stderr)
+    return 1
+
+
+def destination() -> Path:
+    """Work out where entry.txt belongs for this run."""
+    folder = os.environ.get(ENVIRONMENT_VARIABLE) or FALLBACK_DIRECTORY
+    return Path(folder) / OUTPUT_FILENAME
+
+
+def run() -> int:
+    text = assemble_pitch()
+    encoded = text.encode("utf-8")
+
+    broken = [message for ok, message in rule_table(encoded, text) if not ok]
+    if broken:
+        return complain(broken)
+
+    target = destination()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(encoded)
+
+    # Loosen the file itself so other tools can read it; the folder
+    # holding it is never touched, and a failed chmod is not fatal.
     try:
-        os.chmod(path, 0o644)
+        os.chmod(target, 0o644)
     except OSError:
         pass
-    # Read the file back as bytes and confirm they match the pitch exactly.
-    with open(path, "rb") as f:
-        if f.read() != text.encode("utf-8"):
-            print("entry.txt does not match the pitch sentence", file=sys.stderr)
-            return 1
-    print(f"wrote {len(text)} characters to {path}")
+
+    reread = target.read_bytes()
+    if reread != encoded:
+        return complain(["the stored bytes differ from the pitch"])
+
+    print(f"done: {target} now holds the {len(reread)}-byte pitch")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(run())
