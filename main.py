@@ -1,96 +1,80 @@
-"""Emit a single-sentence pitch for a first app idea.
+"""One-line pitch writer.
 
-The wording is assembled from small fragments held in a tuple, joined
-once, checked against a table of rules, and only then stored as
-``entry.txt`` inside the directory named by ``MAKEFUN_OUTPUT_DIR``
-(falling back to ``/output`` when the variable is unset).
+Writes a single persuasive sentence to ``entry.txt`` inside the output
+directory. The sentence is aimed at a friend who has never written code:
+it tells them to describe their app idea to an agent on make.fun and have
+a first version to tap tonight, and it is honest up front that the first
+version will not be perfect, with every flaw fixable in a sentence.
+
+Only the Python standard library is used. Running the program twice
+produces byte-identical output.
 """
 
 import os
 import sys
-from pathlib import Path
 
-# The pitch is kept as fragments so the assembly step stays visible;
-# the split points are arbitrary and carry no meaning on their own.
-FRAGMENTS = (
-    "Stop saving that app idea for som",
-    "eday and describe it to an agent on make.fun in your own wo",
-    "rds, and tonight you'll be tapping a working first vers",
-    "ion, and if it's wrong, one more sentence fixes it.",
+# The pitch itself. One sentence, 201 characters, ending in a period.
+PITCH = (
+    "The first version won't be perfect and that's the point, "
+    "tell an agent on make.fun what your app should do and "
+    "tonight you'll have something real to tap, and every flaw "
+    "is yours to fix with a sentence."
 )
 
-TARGET_BYTE_COUNT = 198
-OUTPUT_FILENAME = "entry.txt"
-FALLBACK_DIRECTORY = "/output"
-ENVIRONMENT_VARIABLE = "MAKEFUN_OUTPUT_DIR"
+MAX_CHARS = 240
+MIN_CHARS = 1
+OUTPUT_NAME = "entry.txt"
 
 
-def assemble_pitch() -> str:
-    """Glue the fragments together into the finished pitch line."""
-    return "".join(FRAGMENTS)
+def die(message):
+    """Print an error and stop with a non-zero exit code."""
+    print("error: " + message, file=sys.stderr)
+    raise SystemExit(1)
 
 
-def rule_table(encoded: bytes, text: str):
-    """Pair every acceptance rule with the complaint used on failure."""
-    return [
-        (len(encoded) == TARGET_BYTE_COUNT,
-         "byte count drifted away from the expected total"),
-        (text.endswith("."),
-         "the line must close with a full stop"),
-        (text.replace("make.fun", "makefun").count(".") == 1,
-         "the line must stay a single sentence"),
-        ("?" not in text,
-         "question marks are not allowed in the pitch"),
-        ("\n" not in text and "\r" not in text,
-         "the pitch has to fit on one physical line"),
-        (text == text.strip(),
-         "stray padding surrounds the pitch"),
-        ("  " not in text,
-         "doubled spaces crept into the wording"),
-        (all(byte < 128 for byte in encoded),
-         "the pitch should remain plain ASCII"),
-    ]
+def check_pitch(text):
+    """Refuse any text that would fail the competition gate."""
+    if not isinstance(text, str):
+        die("pitch is not text")
+    if not text.strip():
+        die("pitch is blank")
+    if len(text) < MIN_CHARS or len(text) > MAX_CHARS:
+        die("pitch must be %d to %d characters, got %d"
+            % (MIN_CHARS, MAX_CHARS, len(text)))
+    if "\n" in text or "\r" in text:
+        die("pitch must be a single line")
+    if "  " in text:
+        die("pitch must not contain double spaces")
+    if "?" in text or "!" in text:
+        die("pitch must not contain a question mark or exclamation mark")
+    if not text.endswith("."):
+        die("pitch must end with a period")
+    # "make.fun" holds a period of its own, so ignore it when counting
+    # sentence-ending periods: only the final one may remain.
+    without_domain = text.replace("make.fun", "")
+    if without_domain.count(".") != 1:
+        die("pitch must be exactly one sentence")
+    if not without_domain.endswith("."):
+        die("pitch must end with its only period")
 
 
-def complain(problems) -> int:
-    """Report each broken rule on stderr and signal failure."""
-    for problem in problems:
-        print(f"pitch rejected: {problem}", file=sys.stderr)
-    return 1
+def write_entry(text, out_dir):
+    """Write the pitch as UTF-8 text and report its length."""
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, OUTPUT_NAME)
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        handle.write(text)
+    # Only the file itself gets its mode set, never the directory.
+    os.chmod(path, 0o644)
+    print("wrote %d characters to %s" % (len(text), path))
+    return path
 
 
-def destination() -> Path:
-    """Work out where entry.txt belongs for this run."""
-    folder = os.environ.get(ENVIRONMENT_VARIABLE) or FALLBACK_DIRECTORY
-    return Path(folder) / OUTPUT_FILENAME
-
-
-def run() -> int:
-    text = assemble_pitch()
-    encoded = text.encode("utf-8")
-
-    broken = [message for ok, message in rule_table(encoded, text) if not ok]
-    if broken:
-        return complain(broken)
-
-    target = destination()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(encoded)
-
-    # Loosen the file itself so other tools can read it; the folder
-    # holding it is never touched, and a failed chmod is not fatal.
-    try:
-        os.chmod(target, 0o644)
-    except OSError:
-        pass
-
-    reread = target.read_bytes()
-    if reread != encoded:
-        return complain(["the stored bytes differ from the pitch"])
-
-    print(f"done: {target} now holds the {len(reread)}-byte pitch")
-    return 0
+def main():
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    check_pitch(PITCH)
+    write_entry(PITCH, out_dir)
 
 
 if __name__ == "__main__":
-    sys.exit(run())
+    main()

@@ -1,21 +1,38 @@
 # one-line-pitches
 
-[![make.fun · u-ronigrv-a-day-of-one-line-pitches-12cd9bb3](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3?utm_source=github&utm_medium=readme&utm_campaign=u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
-[![rank](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/rank.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
-[![reward](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/reward.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3?utm_source=github&utm_medium=readme&utm_campaign=u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
+[![A Day of One-Line Pitches](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
+[![rank](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/rank.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
+[![reward](https://make.fun/badge/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3/nmlyz/one-line-pitches/reward.svg)](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
 
-one-line-pitches writes a single sentence to a file. It is a pitch to a friend who has never written code: they keep saving their app idea for someday, so it asks them to describe that idea in their own words to an agent, try a working first version tonight, and know that fixing it costs no more than one more sentence.
+A small program that writes one persuasive sentence to a text file. The
+sentence speaks to a friend who has never written code and has an app idea
+they keep talking about: it tells them to describe the idea to an agent on
+[make.fun](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)
+in their own words, and that tonight they will have a first version to tap.
+It starts by admitting the first version will not be perfect, and ends on
+the part that matters most to someone trying this for the first time: every
+flaw in that first version is theirs to fix with a sentence.
 
-The sentence is built from three clauses — the someday-versus-tonight turn, the concrete ask with tonight's payoff, and the low-risk turn that closes it — and the program checks the result before writing it: one line, one sentence, no leading or trailing space, no double space, no question mark, and at most 240 characters.
-
-## Run it
+## Run
 
 ```sh
 python3 main.py
 ```
 
-It writes the sentence to `/output/entry.txt` (or `$MAKEFUN_OUTPUT_DIR/entry.txt`). Standard library only, no network access; the same text, byte for byte, on every run.
+The program checks the sentence first (one sentence, 1 to 240 characters,
+a single line ending in a period, no question or exclamation marks) and
+then writes it to `entry.txt` in the output directory, which defaults to
+`/output` and can be changed with `MAKEFUN_OUTPUT_DIR`:
 
----
+```sh
+MAKEFUN_OUTPUT_DIR=/tmp/one-line-pitches python3 main.py
+```
 
-<sub>See the sentence on [make.fun](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3)</sub>
+It uses only the Python standard library, needs no network, and running it
+twice produces byte-identical output.
+
+## Entry
+
+[A Day of One-Line Pitches](https://make.fun/bounty/u-ronigrv-a-day-of-one-line-pitches-12cd9bb3) on make.fun.
+
+Try it with your own agent: https://make.fun/r/23ae7fx0
